@@ -55,7 +55,22 @@ def get_logits(completion):
     # get the last hidden state
     last_hidden_state = outputs.hidden_states[-1]
 
-    # print(last_hidden_state.shape)
+    print(last_hidden_state.shape) # torch.Size([1, 31, 768])
+
+    # force the last hidden state to be of shape (16, 768) by averaging
+    last_hidden_state = torch.mean(last_hidden_state, dim=1, keepdim=True)
+
+    print(last_hidden_state.shape) # torch.Size([1, 1, 768])
+
+    # force the last hidden state to be a 1D tensor of shape (768)
+    last_hidden_state = torch.squeeze(last_hidden_state, dim=1)
+
+    print(last_hidden_state.shape) # torch.Size([1, 768])
+    
+    # convert to numpy
+    last_hidden_state = last_hidden_state.numpy()[0]
+
+    # print(last_hidden_state) # (768,)
 
     # print(len(outputs.hidden_states))
 
@@ -72,6 +87,31 @@ def get_logits(completion):
 
     # return the logits for the completion
     return completion_logits, completion_probs
+
+def get_last_hidden_state(completion):
+    # Tokenize the completion
+    completion_tokens = tokenizer(completion, return_tensors="pt").input_ids
+
+    # # Concatenate the input and completion tokens
+    # input_and_completion = torch.cat((inputs.input_ids, completion_tokens), dim=-1)
+
+    # Get the model's output
+    with torch.no_grad():
+        outputs = model(completion_tokens, output_hidden_states=True)
+
+    # get the last hidden state
+    last_hidden_state = outputs.hidden_states[-1]
+
+    # force the last hidden state to be of shape (16, 768) by averaging
+    last_hidden_state = torch.mean(last_hidden_state, dim=1, keepdim=True)
+
+    # force the last hidden state to be a 1D tensor of shape (768)
+    last_hidden_state = torch.squeeze(last_hidden_state, dim=1)
+    
+    # convert to numpy
+    last_hidden_state = last_hidden_state.numpy()[0]
+
+    return last_hidden_state
 
 for completion in completions:
     print(input_string + completion)
